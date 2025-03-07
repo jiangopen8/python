@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-LIFEcare 个性化健康评估订餐</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 80px;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        /* 页面头部 */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #42b983 0%, #2f9c6a 100%);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .back-button {
+            margin-right: 15px;
+            width: 24px;
+            height: 24px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        /* 进度指示器 */
+        .progress-container {
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #42b983 0%, #2f9c6a 100%);
+            width: 25%; /* 初始进度25% */
+            transition: width 0.3s ease;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        
+        .step {
+            font-size: 0.8rem;
+            color: #999;
+        }
+        
+        .step.active {
+            color: #42b983;
+            font-weight: 500;
+        }
+        
+        /* 评估表单 */
+        .assessment-form {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+        
+        .form-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .form-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #333;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #42b983;
+            outline: none;
+        }
+        
+        /* 选择器样式 */
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .option-item {
+            flex: 1 0 calc(50% - 5px);
+            position: relative;
+        }
+        
+        .option-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .option-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .option-input:checked + .option-label {
+            background-color: rgba(66, 185, 131, 0.1);
+            border-color: #42b983;
+        }
+        
+        .option-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .option-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* 健康数据卡片 */
+        .health-data-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+        
+        .health-data-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .health-data-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2342b983"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .health-data-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .health-data-list {
+            list-style: none;
+        }
+        
+        .health-data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .health-data-item:last-child {
+            border-bottom: none;
+        }
+        
+        .health-data-label {
+            color: #666;
+        }
+        
+        .health-data-value {
+            font-weight: 500;
+        }
+        
+        /* 按钮样式 */
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .button {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .button-primary {
+            background: linear-gradient(135deg, #42b983 0%, #2f9c6a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(66, 185, 131, 0.2);
+        }
+        
+        .button-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(66, 185, 131, 0.2);
+        }
+        
+        .button-outline {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            color: #666;
+        }
+        
+        .button-outline:active {
+            background-color: #f9f9f9;
+            transform: scale(0.98);
+        }
+        
+        /* 购物车按钮样式 */
+        .cart-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #42b983 0%, #2f9c6a 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 15px rgba(66, 185, 131, 0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .cart-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(66, 185, 131, 0.3);
+        }
+        
+        .cart-icon {
+            width: 28px;
+            height: 28px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #ff5252;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+        
+        /* 健康目标图标 */
+        .weight-icon {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2342b983"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>');
+        }
+        
+        .muscle-icon {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2342b983"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>');
+        }
+        
+        .health-icon {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2342b983"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+        }
+        
+        .energy-icon {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2342b983"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>');
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面头部 -->
+        <div class="header">
+            <div class="back-button" id="backButton"></div>
+            <div class="header-title">个性化健康评估订餐</div>
+        </div>
+        
+        <!-- 进度指示器 -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-steps">
+                <div class="step active">基本信息</div>
+                <div class="step">健康目标</div>
+                <div class="step">饮食偏好</div>
+                <div class="step">推荐结果</div>
+            </div>
+        </div>
+        
+        <!-- 表单区域 -->
+        <div id="formContainer">
+            <!-- 第一步：基本信息 -->
+            <div class="assessment-form" id="step1">
+                <div class="form-title">基本信息</div>
+                <div class="form-description">
+                    请填写您的基本信息，帮助我们为您提供更精准的健康餐饮推荐。
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">性别</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="radio" name="gender" id="male" class="option-input" checked>
+                            <label for="male" class="option-label">
+                                <div class="option-text">男</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="gender" id="female" class="option-input">
+                            <label for="female" class="option-label">
+                                <div class="option-text">女</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">年龄</label>
+                    <input type="number" class="input-field" placeholder="请输入您的年龄">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">身高 (cm)</label>
+                    <input type="number" class="input-field" placeholder="请输入您的身高">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">体重 (kg)</label>
+                    <input type="number" class="input-field" placeholder="请输入您的体重">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">活动水平</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="radio" name="activity" id="low" class="option-input" checked>
+                            <label for="low" class="option-label">
+                                <div class="option-text">久坐少动</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="activity" id="moderate" class="option-input">
+                            <label for="moderate" class="option-label">
+                                <div class="option-text">适度活动</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="activity" id="high" class="option-input">
+                            <label for="high" class="option-label">
+                                <div class="option-text">高强度活动</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 第二步：健康目标（默认隐藏） -->
+            <div class="assessment-form" id="step2" style="display: none;">
+                <div class="form-title">健康目标</div>
+                <div class="form-description">
+                    请选择您的健康目标，我们将根据您的目标提供相应的餐饮推荐。
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">您的主要健康目标是什么？</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="radio" name="goal" id="weight-loss" class="option-input" checked>
+                            <label for="weight-loss" class="option-label">
+                                <div class="option-icon weight-icon"></div>
+                                <div class="option-text">减重控脂</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="goal" id="muscle-gain" class="option-input">
+                            <label for="muscle-gain" class="option-label">
+                                <div class="option-icon muscle-icon"></div>
+                                <div class="option-text">增肌塑形</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="goal" id="health-maintenance" class="option-input">
+                            <label for="health-maintenance" class="option-label">
+                                <div class="option-icon health-icon"></div>
+                                <div class="option-text">健康维护</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="goal" id="energy-boost" class="option-input">
+                            <label for="energy-boost" class="option-label">
+                                <div class="option-icon energy-icon"></div>
+                                <div class="option-text">提升活力</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">您是否有特殊健康状况？（可多选）</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" id="diabetes" class="option-input">
+                            <label for="diabetes" class="option-label">
+                                <div class="option-text">糖尿病</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="hypertension" class="option-input">
+                            <label for="hypertension" class="option-label">
+                                <div class="option-text">高血压</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="heart-disease" class="option-input">
+                            <label for="heart-disease" class="option-label">
+                                <div class="option-text">心脏病</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="none" class="option-input" checked>
+                            <label for="none" class="option-label">
+                                <div class="option-text">无</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 第三步：饮食偏好（默认隐藏） -->
+            <div class="assessment-form" id="step3" style="display: none;">
+                <div class="form-title">饮食偏好</div>
+                <div class="form-description">
+                    请告诉我们您的饮食偏好，帮助我们为您推荐更符合口味的健康餐品。
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">您的饮食习惯是？</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="radio" name="diet" id="omnivore" class="option-input" checked>
+                            <label for="omnivore" class="option-label">
+                                <div class="option-text">无特殊限制</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="diet" id="vegetarian" class="option-input">
+                            <label for="vegetarian" class="option-label">
+                                <div class="option-text">素食主义</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="diet" id="vegan" class="option-input">
+                            <label for="vegan" class="option-label">
+                                <div class="option-text">纯素食主义</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="diet" id="keto" class="option-input">
+                            <label for="keto" class="option-label">
+                                <div class="option-text">生酮饮食</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">您有食物过敏吗？（可多选）</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" id="nuts" class="option-input">
+                            <label for="nuts" class="option-label">
+                                <div class="option-text">坚果</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="seafood" class="option-input">
+                            <label for="seafood" class="option-label">
+                                <div class="option-text">海鲜</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="dairy" class="option-input">
+                            <label for="dairy" class="option-label">
+                                <div class="option-text">乳制品</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="gluten" class="option-input">
+                            <label for="gluten" class="option-label">
+                                <div class="option-text">麸质</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="no-allergies" class="option-input" checked>
+                            <label for="no-allergies" class="option-label">
+                                <div class="option-text">无</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">口味偏好</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="radio" name="taste" id="light" class="option-input" checked>
+                            <label for="light" class="option-label">
+                                <div class="option-text">清淡</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="taste" id="moderate-taste" class="option-input">
+                            <label for="moderate-taste" class="option-label">
+                                <div class="option-text">适中</div>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="taste" id="spicy" class="option-input">
+                            <label for="spicy" class="option-label">
+                                <div class="option-text">重口味/辣</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 第四步：健康评估结果（默认隐藏） -->
+            <div id="step4" style="display: none;">
+                <div class="health-data-card">
+                    <div class="health-data-header">
+                        <div class="health-data-icon"></div>
+                        <div class="health-data-title">您的健康数据</div>
+                    </div>
+                    <ul class="health-data-list">
+                        <li class="health-data-item">
+                            <span class="health-data-label">BMI指数</span>
+                            <span class="health-data-value">22.5（正常范围）</span>
+                        </li>
+                        <li class="health-data-item">
+                            <span class="health-data-label">基础代谢率</span>
+                            <span class="health-data-value">1680 kcal/天</span>
+                        </li>
+                        <li class="health-data-item">
+                            <span class="health-data-label">每日推荐摄入热量</span>
+                            <span class="health-data-value">2100 kcal</span>
+                        </li>
+                        <li class="health-data-item">
+                            <span class="health-data-label">推荐蛋白质摄入</span>
+                            <span class="health-data-value">105 g/天</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="assessment-form">
+                    <div class="form-title">个性化餐饮方案</div>
+                    <div class="form-description">
+                        基于您的健康数据和目标，我们为您推荐以下餐饮方案。
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">您希望如何用餐？</label>
+                        <div class="option-group">
+                            <div class="option-item">
+                                <input type="radio" name="dining" id="dine-in" class="option
